@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: misschat
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JSON_BODY_LIMIT
+        value: 50mb

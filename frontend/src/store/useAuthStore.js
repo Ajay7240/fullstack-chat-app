@@ -8,7 +8,9 @@ const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000
 export const useAuthStore = create((set, get) => ({
     authUser: null,
     isSigningUp: false,
-    isLoggingIng: false,
+    isVerifyingSignup: false,
+    pendingSignup: null,
+    isLoggingIn: false,
     isUpdatingProfile: false,
     isCheckingAuth: true,
     onlineUsers: [],
@@ -34,21 +36,36 @@ export const useAuthStore = create((set, get) => ({
         set({ isSigningUp: true });
         try {
             const res = await axiosInstance.post("/auth/signup", data);
-            set({ authUser: res.data });
-
-            toast.success("Account created successfully");
-
-            get().connectSocket();
+            set({ pendingSignup: res.data });
+            toast.success(res.data.message || "OTP sent successfully");
+            return true;
 
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || "Signup failed");
+            return false;
         } finally {
             set({ isSigningUp: false })
         }
     },
 
+    verifySignup: async (data) => {
+        set({ isVerifyingSignup: true });
+        try {
+            const res = await axiosInstance.post("/auth/verify-signup", data);
+            set({ authUser: res.data, pendingSignup: null });
+            toast.success("Account verified successfully");
+            get().connectSocket();
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Verification failed");
+            return false;
+        } finally {
+            set({ isVerifyingSignup: false })
+        }
+    },
+
     login: async (data) => {
-        set({ isLoggingIng: true });
+        set({ isLoggingIn: true });
         try {
             const res = await axiosInstance.post("/auth/login", data);
             set({ authUser: res.data });
@@ -56,9 +73,9 @@ export const useAuthStore = create((set, get) => ({
 
             get().connectSocket();
         } catch (error) {
-            toast.error(error.response.data.message)
+            toast.error(error.response?.data?.message || "Login failed")
         } finally {
-            set({ isLoggingIng: false })
+            set({ isLoggingIn: false })
         }
 
     },
@@ -94,19 +111,27 @@ export const useAuthStore = create((set, get) => ({
         if (!authUser || get().socket?.connected) return;
 
         const socket = io(BASE_URL, {
+            autoConnect: false,
             query: {
                 userId: authUser._id,
             },
         });
-        socket.connect();
-
         set({ socket: socket })
+
+        socket.connect();
 
         socket.on("getOnlineUsers", (userIds) => {
             set({ onlineUsers: userIds });
         })
     },
     disconnectSocket: () => {
-        if (get().socket?.connected) get().socket.disconnect();
+        const socket = get().socket;
+
+        if (socket) {
+            socket.off("getOnlineUsers");
+            socket.disconnect();
+        }
+
+        set({ socket: null, onlineUsers: [] });
     },
 }));

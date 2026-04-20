@@ -8,16 +8,19 @@ import ProfilePage from './pages/ProfilePage'
 
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/useAuthStore'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Loader } from 'lucide-react'
 import { Toaster } from 'react-hot-toast'
 import { useThemeStore } from './store/useThemeStore'
+import { useChatStore } from './store/useChatStore'
 
 const App = () => {
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
+  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
   const { theme } = useThemeStore();
-
-  console.log(onlineUsers);
+  const resetChat = useChatStore((state) => state.resetChat);
+  const restoreSelectedUser = useChatStore((state) => state.restoreSelectedUser);
+  const previousUserIdRef = useRef(null);
+  const wasCheckingAuthRef = useRef(true);
 
   useEffect(() => {
     checkAuth()
@@ -28,7 +31,31 @@ const App = () => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  console.log({ authUser });
+  useEffect(() => {
+    const currentUserId = authUser?._id || null;
+    const previousUserId = previousUserIdRef.current;
+
+    if(previousUserId === currentUserId){
+      if(!isCheckingAuth) wasCheckingAuthRef.current = false;
+      return;
+    }
+
+    if(previousUserId && !currentUserId){
+      resetChat({ clearPersisted: true, userId: previousUserId });
+    } else if(previousUserId && currentUserId && previousUserId !== currentUserId){
+      resetChat({ clearPersisted: true, userId: previousUserId });
+      resetChat({ clearPersisted: true, userId: currentUserId });
+    } else if(!previousUserId && currentUserId){
+      if(wasCheckingAuthRef.current){
+        restoreSelectedUser(currentUserId);
+      } else {
+        resetChat({ clearPersisted: true, userId: currentUserId });
+      }
+    }
+
+    previousUserIdRef.current = currentUserId;
+    if(!isCheckingAuth) wasCheckingAuthRef.current = false;
+  }, [authUser?._id, isCheckingAuth, resetChat, restoreSelectedUser]);
 
   if (isCheckingAuth && !authUser) return (
     <div className='flex items-center justify-center h-screen'>

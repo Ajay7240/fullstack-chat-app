@@ -1,59 +1,50 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+const signupOtpSchema = new mongoose.Schema(
     {
         email: {
             type: String,
             required: true,
-            unique: true,
             lowercase: true,
             trim: true,
         },
-
+        phoneNumber: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        username: {
+            type: String,
+            required: true,
+            lowercase: true,
+            trim: true,
+        },
         fullName: {
             type: String,
             required: true,
             trim: true,
         },
-
-        username: {
-            type: String,
-            unique: true,
-            sparse: true,
-            lowercase: true,
-            trim: true,
-        },
-
-        phoneNumber: {
-            type: String,
-            unique: true,
-            sparse: true,
-            trim: true,
-        },
-
         password: {
             type: String,
             required: true,
-            minlength: 6,
         },
-        profilePic: {
+        emailOtpHash: {
             type: String,
-            default: "",
+            required: true,
         },
-
-        emailVerified: {
-            type: Boolean,
-            default: true,
+        expiresAt: {
+            type: Date,
+            required: true,
+            index: { expires: 0 },
         },
-
-        isVerified: {
-            type: Boolean,
-            default: true,
+        attempts: {
+            type: Number,
+            default: 0,
         },
     },
-    {timestamps: true}
+    { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
+const SignupOtp = mongoose.model("SignupOtp", signupOtpSchema);
 
-export default User;
+export default SignupOtp;

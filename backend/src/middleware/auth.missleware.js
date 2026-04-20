@@ -21,6 +21,10 @@ export const protectRoute = async (req, res, next) => {
             return res.status(404).json({message: "User not found"});
         }
 
+        if(user.isVerified === false){
+            return res.status(403).json({message: "Please verify your account"});
+        }
+
         req.user = user;
 
         next();

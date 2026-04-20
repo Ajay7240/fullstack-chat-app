@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore.js'
-import { Camera, Mail, User } from 'lucide-react';
+import { AtSign, Camera, Mail, Phone, User } from 'lucide-react';
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
@@ -73,6 +73,26 @@ const ProfilePage = () => {
               </div>
               <p className='px-4 py-2.5 bg-base-200 rounded-lg border'>{authUser?.email}</p>
             </div>
+
+            {authUser?.username && (
+              <div className="space-y-1.5">
+                <div className='text-sm text-zinc-400 flex items-center gap-2'>
+                  <AtSign className='w-4 h-4' />
+                  Username
+                </div>
+                <p className='px-4 py-2.5 bg-base-200 rounded-lg border'>@{authUser.username}</p>
+              </div>
+            )}
+
+            {authUser?.phoneNumber && (
+              <div className="space-y-1.5">
+                <div className='text-sm text-zinc-400 flex items-center gap-2'>
+                  <Phone className='w-4 h-4' />
+                  Phone Number
+                </div>
+                <p className='px-4 py-2.5 bg-base-200 rounded-lg border'>{authUser.phoneNumber}</p>
+              </div>
+            )}
           </div>
 
           <div className='mt-6 bg-base-300 rounded-xl p-6'>
